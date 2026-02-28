@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>QC Report → Excel Converter</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #0a0f1e;
+    --surface: #111827;
+    --surface2: #1a2235;
+    --accent: #4285f4;
+    --accent2: #34a853;
+    --text: #e2e8f0;
+    --muted: #64748b;
+    --success: #10b981;
+    --error: #ef4444;
+    --border: rgba(66,133,244,0.2);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { background: var(--bg); color: var(--text); font-family: 'Syne', sans-serif; min-height: 100vh; overflow-x: hidden; }
+  body::before {
+    content: ''; position: fixed; inset: 0;
+    background-image: linear-gradient(rgba(66,133,244,0.03) 1px, transparent 1px), linear-gradient(90deg, rgba(66,133,244,0.03) 1px, transparent 1px);
+    background-size: 40px 40px; pointer-events: none; z-index: 0;
+  }
+  .container { max-width: 900px; margin: 0 auto; padding: 40px 24px; position: relative; z-index: 1; }
+
+  header { text-align: center; margin-bottom: 40px; animation: fadeDown 0.6s ease both; }
+  .logo-tag {
+    display: inline-block;
+    background: linear-gradient(135deg, #4285f4, #34a853);
+    color: white; font-family: 'Space Mono', monospace; font-size: 11px;
+    padding: 4px 14px; border-radius: 20px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px;
+  }
+  h1 {
+    font-size: clamp(32px, 5vw, 52px); font-weight: 800; line-height: 1.1;
+    background: linear-gradient(135deg, #4285f4, #fff 50%, #34a853);
+    -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  }
+  .subtitle { color: var(--muted); margin-top: 10px; font-size: 15px; }
+
+  /* Setup banner */
+  .setup-banner {
+    background: linear-gradient(135deg, rgba(66,133,244,0.1), rgba(52,168,83,0.1));
+    border: 1px solid rgba(66,133,244,0.3);
+    border-radius: 16px; padding: 20px 24px; margin-bottom: 24px;
+    animation: fadeUp 0.6s ease 0.05s both;
+  }
+  .setup-title { font-weight: 700; font-size: 14px; margin-bottom: 10px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
+  .setup-steps { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); line-height: 2; }
+  .setup-steps span { color: var(--text); }
+  .setup-steps code {
+    background: var(--surface2); padding: 2px 8px; border-radius: 4px;
+    color: #34a853; font-size: 12px; border: 1px solid rgba(52,168,83,0.3);
+  }
+
+  .api-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; animation: fadeUp 0.6s ease 0.1s both; }
+  .section-label { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+  .section-label::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
+
+  .api-input-row { display: flex; gap: 12px; }
+  input[type="password"] {
+    flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
+    padding: 12px 16px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 14px; outline: none; transition: border-color 0.2s;
+  }
+  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(66,133,244,0.12); }
+  .help-link { color: var(--accent); font-size: 12px; font-family: 'Space Mono', monospace; text-decoration: none; margin-top: 10px; display: inline-block; opacity: 0.8; }
+  .help-link:hover { opacity: 1; text-decoration: underline; }
+
+  .btn { background: linear-gradient(135deg, var(--accent), #1a6fd4); color: white; border: none; border-radius: 10px; padding: 12px 24px; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
+  .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(66,133,244,0.4); }
+  .btn:active { transform: translateY(0); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: none; }
+  .btn-green { background: linear-gradient(135deg, var(--accent2), #1a7a3a); }
+  .btn-green:hover { box-shadow: 0 8px 24px rgba(52,168,83,0.4); }
+  .btn-ghost { background: var(--surface2); border: 1px solid var(--border); }
+  .btn-ghost:hover { box-shadow: none; background: var(--surface); }
+  .btn-red { background: linear-gradient(135deg, #ea4335, #c0392b) !important; }
+
+  .drop-zone { border: 2px dashed var(--border); border-radius: 20px; padding: 60px 40px; text-align: center; cursor: pointer; transition: all 0.3s; background: var(--surface); animation: fadeUp 0.6s ease 0.2s both; }
+  .drop-zone.drag-over { border-color: var(--accent); background: rgba(66,133,244,0.05); }
+  .drop-icon { font-size: 64px; line-height: 1; margin-bottom: 16px; }
+  .drop-title { font-size: 22px; font-weight: 700; margin-bottom: 8px; }
+  .drop-hint { color: var(--muted); font-size: 14px; margin-bottom: 20px; }
+  input[type="file"] { display: none; }
+
+  .previews { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 12px; margin-top: 24px; }
+  .preview-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; position: relative; aspect-ratio: 3/4; }
+  .preview-card img { width: 100%; height: 100%; object-fit: cover; }
+  .preview-card .remove { position: absolute; top: 6px; right: 6px; background: rgba(0,0,0,0.7); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: background 0.2s; }
+  .preview-card .remove:hover { background: var(--error); }
+  .status-badge { position: absolute; bottom: 6px; left: 6px; padding: 3px 8px; border-radius: 6px; font-size: 10px; font-family: 'Space Mono', monospace; font-weight: 700; }
+  .badge-pending { background: rgba(100,116,139,0.9); }
+  .badge-processing { background: rgba(66,133,244,0.9); }
+  .badge-done { background: rgba(52,168,83,0.9); }
+  .badge-error { background: rgba(239,68,68,0.9); }
+
+  .action-bar { display: flex; align-items: center; gap: 12px; margin-top: 24px; flex-wrap: wrap; animation: fadeUp 0.6s ease 0.3s both; }
+  .file-count { font-family: 'Space Mono', monospace; font-size: 13px; color: var(--muted); }
+  .file-count span { color: var(--accent); font-weight: 700; }
+
+  .progress-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-top: 24px; }
+  .progress-bar-track { height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; margin: 12px 0; }
+  .progress-bar-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); border-radius: 3px; transition: width 0.4s ease; box-shadow: 0 0 10px var(--accent); }
+  .progress-log { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--muted); max-height: 100px; overflow-y: auto; margin-top: 8px; }
+  .log-line { margin-bottom: 4px; }
+  .log-line.success { color: var(--success); }
+  .log-line.error { color: var(--error); }
+  .log-line.info { color: var(--accent); }
+
+  .results-section { margin-top: 24px; }
+  .results-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; flex-wrap: wrap; gap: 12px; }
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; overflow: auto; max-height: 400px; }
+  table { width: 100%; border-collapse: collapse; }
+  thead th { background: var(--surface2); padding: 12px 16px; text-align: left; font-family: 'Space Mono', monospace; font-size: 10px; color: var(--accent); letter-spacing: 1.5px; text-transform: uppercase; position: sticky; top: 0; z-index: 2; white-space: nowrap; border-bottom: 1px solid var(--border); }
+  tbody tr { border-bottom: 1px solid rgba(255,255,255,0.04); transition: background 0.15s; }
+  tbody tr:hover { background: rgba(66,133,244,0.04); }
+  tbody td { padding: 10px 16px; color: var(--text); white-space: nowrap; font-family: 'Space Mono', monospace; font-size: 12px; }
+  tbody td:first-child { font-family: 'Syne', sans-serif; font-weight: 600; white-space: normal; min-width: 160px; }
+  .no-defect { color: var(--success); }
+  .has-defect { color: var(--error); }
+  .hidden { display: none !important; }
+
+  @keyframes fadeDown { from { opacity: 0; transform: translateY(-20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+  .processing-pulse { animation: pulse 1s ease infinite; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <div class="logo-tag">✦ Powered by Gemini AI</div>
+    <h1>QC Report<br>→ Excel</h1>
+    <p class="subtitle">Upload quality control report images — AI extracts data & exports to Excel</p>
+  </header>
+
+  <!-- Setup Instructions -->
+  <div class="setup-banner">
+    <div class="setup-title">⚙ One-time Setup Required</div>
+    <div class="setup-steps">
+      1. Make sure <span>Python 3</span> is installed on your computer<br>
+      2. Place <code>server.py</code> and <code>index.html</code> in the same folder<br>
+      3. Open a terminal in that folder and run: <code>python server.py</code><br>
+      4. Open your browser and go to: <code>http://localhost:8080</code><br>
+      5. Enter your Gemini API key below and start converting!
+    </div>
+  </div>
+
+  <!-- API Key -->
+  <div class="api-section">
+    <div class="section-label">Gemini API Key</div>
+    <div class="api-input-row">
+      <input type="password" id="apiKey" placeholder="AIzaSy..." autocomplete="off">
+      <button class="btn" onclick="saveKey()">Save Key</button>
+    </div>
+    <a class="help-link" href="https://aistudio.google.com/app/apikey" target="_blank">
+      → Get a free key at aistudio.google.com/app/apikey
+    </a>
+  </div>
+
+  <!-- Drop Zone -->
+  <div class="drop-zone" id="dropZone" onclick="document.getElementById('fileInput').click()">
+    <input type="file" id="fileInput" accept="image/*" multiple onchange="handleFiles(this.files)">
+    <div class="drop-icon">📋</div>
+    <div class="drop-title">Drop QC Report Images Here</div>
+    <div class="drop-hint">Supports JPG, PNG, WebP — upload multiple files at once</div>
+    <button class="btn" onclick="event.stopPropagation(); document.getElementById('fileInput').click()">Browse Files</button>
+  </div>
+
+  <div class="previews hidden" id="previews"></div>
+
+  <div class="action-bar hidden" id="actionBar">
+    <span class="file-count">Ready: <span id="fileCountDisplay">0</span> image(s)</span>
+    <button class="btn btn-green" id="convertBtn" onclick="startConversion()">⚡ Extract & Convert to Excel</button>
+    <button class="btn btn-ghost" onclick="clearAll()">Clear All</button>
+  </div>
+
+  <div class="progress-section hidden" id="progressSection">
+    <div class="section-label">Processing</div>
+    <div id="progressText" style="font-size:14px;margin-bottom:4px">Starting...</div>
+    <div class="progress-bar-track"><div class="progress-bar-fill" id="progressBar" style="width:0%"></div></div>
+    <div class="progress-log" id="progressLog"></div>
+  </div>
+
+  <div class="results-section hidden" id="resultsSection">
+    <div class="results-header">
+      <div class="section-label">Extracted Data &nbsp;—&nbsp; <span id="rowCount" style="color:var(--text);font-family:'Syne',sans-serif">0</span> products</div>
+      <button class="btn btn-green" onclick="downloadExcel()">⬇ Download Excel</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Variety</th><th>Batch Code</th><th>Mfg Date</th><th>Expiry Date</th>
+            <th>MRP</th><th>Defects</th><th>Dispatch CTN</th><th>Party Name</th><th>Source</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+<script>
+let files = [];
+let allRows = [];
+let failedIndices = [];
+
+const dz = document.getElementById('dropZone');
+dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
+dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
+dz.addEventListener('drop', e => { e.preventDefault(); dz.classList.remove('drag-over'); handleFiles(e.dataTransfer.files); });
+
+function handleFiles(fileList) {
+  for (const f of fileList) {
+    if (f.type.startsWith('image/') && !files.find(x => x.name === f.name && x.size === f.size)) files.push(f);
+  }
+  renderPreviews();
+}
+
+function renderPreviews() {
+  const container = document.getElementById('previews');
+  const bar = document.getElementById('actionBar');
+  if (!files.length) { container.classList.add('hidden'); bar.classList.add('hidden'); return; }
+  container.classList.remove('hidden');
+  bar.classList.remove('hidden');
+  container.innerHTML = files.map((f, i) => `
+    <div class="preview-card" id="card-${i}">
+      <img src="${URL.createObjectURL(f)}" alt="${f.name}">
+      <button class="remove" onclick="removeFile(${i})">✕</button>
+      <span class="status-badge badge-pending" id="badge-${i}">PENDING</span>
+    </div>`).join('');
+  document.getElementById('fileCountDisplay').textContent = files.length;
+}
+
+function removeFile(i) { files.splice(i, 1); failedIndices = failedIndices.filter(x => x !== i); renderPreviews(); }
+
+function clearAll() {
+  files = []; allRows = []; failedIndices = [];
+  renderPreviews();
+  document.getElementById('progressSection').classList.add('hidden');
+  document.getElementById('resultsSection').classList.add('hidden');
+}
+
+function saveKey() {
+  const k = document.getElementById('apiKey').value.trim();
+  if (k) { window._apiKey = k; addLog('Gemini API key saved ✓', 'success'); }
+  else alert('Please enter a key first.');
+}
+
+function getKey() { return window._apiKey || document.getElementById('apiKey').value.trim(); }
+
+function addLog(msg, type = '') {
+  const log = document.getElementById('progressLog');
+  const line = document.createElement('div');
+  line.className = 'log-line ' + type;
+  line.textContent = `> ${msg}`;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+function setProgress(pct, text) {
+  document.getElementById('progressBar').style.width = pct + '%';
+  document.getElementById('progressText').textContent = text;
+}
+
+function updateConvertBtn() {
+  const btn = document.getElementById('convertBtn');
+  if (failedIndices.length > 0) {
+    btn.textContent = `↺ Retry Failed (${failedIndices.length})`;
+    btn.className = 'btn btn-red';
+  } else {
+    btn.textContent = '⚡ Extract & Convert to Excel';
+    btn.className = 'btn btn-green';
+  }
+}
+
+async function callGemini(file) {
+  const b64 = await fileToBase64(file);
+  const mimeType = file.type || 'image/jpeg';
+  const key = getKey();
+
+  // Try backend proxy first (when running via server.py)
+  try {
+    const resp = await fetch('/api/gemini', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ apiKey: key, imageB64: b64, mimeType })
+    });
+    if (resp.ok) {
+      const data = await resp.json();
+      if (data.error) throw new Error(data.error);
+      return data.rows;
+    }
+    // If we get a non-OK from the proxy, throw to show the real error
+    const errData = await resp.json().catch(() => ({}));
+    throw new Error(errData.error || `Server error ${resp.status}`);
+  } catch (proxyErr) {
+    // If fetch itself failed (not running via server), give a clear message
+    if (proxyErr.message === 'Failed to fetch' || proxyErr.name === 'TypeError') {
+      throw new Error(
+        'Cannot reach server. Please run: python server.py — then open http://localhost:8080'
+      );
+    }
+    throw proxyErr;
+  }
+}
+
+async function processIndex(i) {
+  const f = files[i];
+  const badge = document.getElementById(`badge-${i}`);
+  const existingRetry = document.getElementById(`retry-${i}`);
+  if (existingRetry) existingRetry.remove();
+
+  if (badge) { badge.className = 'status-badge badge-processing processing-pulse'; badge.textContent = 'READING'; }
+
+  addLog(`Extracting: ${f.name}`);
+
+  try {
+    const rows = await callGemini(f);
+    rows.forEach(r => { r._source = f.name; });
+    // Remove old rows from this file if retrying
+    allRows = allRows.filter(r => r._source !== f.name);
+    allRows.push(...rows);
+
+    if (badge) { badge.className = 'status-badge badge-done'; badge.textContent = 'DONE'; badge.classList.remove('processing-pulse'); }
+    addLog(`✓ Found ${rows.length} product(s) in ${f.name}`, 'success');
+    return true;
+
+  } catch (e) {
+    failedIndices.push(i);
+    if (badge) { badge.className = 'status-badge badge-error'; badge.textContent = 'ERROR'; badge.classList.remove('processing-pulse'); }
+
+    // Per-card retry button
+    const card = document.getElementById(`card-${i}`);
+    if (card && !document.getElementById(`retry-${i}`)) {
+      const rb = document.createElement('button');
+      rb.id = `retry-${i}`;
+      rb.textContent = '↺';
+      rb.title = 'Retry this image';
+      rb.style.cssText = 'position:absolute;top:34px;right:6px;background:rgba(66,133,244,0.9);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;';
+      rb.onclick = ev => { ev.stopPropagation(); retrySingle(i); };
+      card.appendChild(rb);
+    }
+    addLog(`✗ ${f.name}: ${e.message}`, 'error');
+    return false;
+  }
+}
+
+async function startConversion() {
+  const key = getKey();
+  if (!key) { alert('Please enter your Gemini API key first.'); return; }
+  if (!files.length) { alert('Please upload at least one image.'); return; }
+
+  const indicesToProcess = failedIndices.length > 0 ? [...failedIndices] : files.map((_, i) => i);
+  failedIndices = [];
+
+  document.getElementById('progressSection').classList.remove('hidden');
+  document.getElementById('progressLog').innerHTML = '';
+  document.getElementById('convertBtn').disabled = true;
+
+  setProgress(0, 'Starting extraction...');
+  addLog(`Processing ${indicesToProcess.length} image(s) with Gemini...`, 'info');
+
+  for (let idx = 0; idx < indicesToProcess.length; idx++) {
+    setProgress(Math.round((idx / indicesToProcess.length) * 90), `Image ${idx + 1} of ${indicesToProcess.length}`);
+    await processIndex(indicesToProcess[idx]);
+  }
+
+  const failCount = failedIndices.length;
+  const successCount = indicesToProcess.length - failCount;
+
+  if (failCount > 0) {
+    setProgress(100, `⚠ ${successCount} succeeded, ${failCount} failed — click "Retry Failed" to try again`);
+    addLog(`${failCount} image(s) failed.`, 'error');
+  } else {
+    setProgress(100, `✓ Done! Extracted ${allRows.length} total product entries.`);
+    addLog(`─── Complete: ${allRows.length} rows ───`, 'info');
+  }
+
+  document.getElementById('convertBtn').disabled = false;
+  updateConvertBtn();
+  if (allRows.length > 0) renderTable();
+}
+
+async function retrySingle(i) {
+  const key = getKey();
+  if (!key) { alert('Please enter your Gemini API key first.'); return; }
+  failedIndices = failedIndices.filter(x => x !== i);
+  await processIndex(i);
+  updateConvertBtn();
+  if (allRows.length > 0) renderTable();
+}
+
+function fileToBase64(file) {
+  return new Promise((res, rej) => {
+    const r = new FileReader();
+    r.onload = () => res(r.result.split(',')[1]);
+    r.onerror = rej;
+    r.readAsDataURL(file);
+  });
+}
+
+function renderTable() {
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = allRows.map(r => `
+    <tr>
+      <td>${r.variety||''}</td>
+      <td>${r.batch_code||''}</td>
+      <td>${r.mfg_date||''}</td>
+      <td>${r.expiry_date||''}</td>
+      <td>${r.mrp||''}</td>
+      <td class="${(r.defects_status||'').toLowerCase()==='yes'?'has-defect':'no-defect'}">${r.defects_status||''}</td>
+      <td>${r.total_dispatch_ctn||''}</td>
+      <td>${r.party_name||''}</td>
+      <td style="color:var(--muted);font-size:10px">${r._source||''}</td>
+    </tr>`).join('');
+  document.getElementById('rowCount').textContent = allRows.length;
+  document.getElementById('resultsSection').classList.remove('hidden');
+}
+
+function downloadExcel() {
+  if (!allRows.length) return;
+  const wsData = [
+    ['Variety','Batch Code','Mfg Date','Expiry Date','MRP','Defects Status','Total Dispatch CTN','Party Name','Source Image'],
+    ...allRows.map(r => [r.variety,r.batch_code,r.mfg_date,r.expiry_date,r.mrp,r.defects_status,r.total_dispatch_ctn,r.party_name,r._source])
+  ];
+  const ws = XLSX.utils.aoa_to_sheet(wsData);
+  ws['!cols'] = [{wch:28},{wch:22},{wch:14},{wch:14},{wch:8},{wch:14},{wch:18},{wch:26},{wch:26}];
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, ws, 'QC Report');
+  XLSX.writeFile(wb, `QC_Report_${new Date().toISOString().split('T')[0]}.xlsx`);
+}
+</script>
+</body>
+</html>
