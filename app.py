@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify, send_from_directory
 
 app = Flask(__name__, static_folder="static")
 
-GEMINI_MODEL = "gemini-2.5-flash-preview-04-17"
+GEMINI_MODEL = "gemini-1.5-flash"
 
 PROMPT = (
     "You are a data extraction assistant. Extract ALL product entries from this "
