@@ -8,15 +8,10 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
   :root {
-    --bg: #0a0f1e;
-    --surface: #111827;
-    --surface2: #1a2235;
-    --accent: #4285f4;
-    --accent2: #34a853;
-    --text: #e2e8f0;
-    --muted: #64748b;
-    --success: #10b981;
-    --error: #ef4444;
+    --bg: #0a0f1e; --surface: #111827; --surface2: #1a2235;
+    --accent: #4285f4; --accent2: #34a853;
+    --text: #e2e8f0; --muted: #64748b;
+    --success: #10b981; --error: #ef4444;
     --border: rgba(66,133,244,0.2);
   }
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -30,8 +25,7 @@
 
   header { text-align: center; margin-bottom: 40px; animation: fadeDown 0.6s ease both; }
   .logo-tag {
-    display: inline-block;
-    background: linear-gradient(135deg, #4285f4, #34a853);
+    display: inline-block; background: linear-gradient(135deg, #4285f4, #34a853);
     color: white; font-family: 'Space Mono', monospace; font-size: 11px;
     padding: 4px 14px; border-radius: 20px; letter-spacing: 2px; text-transform: uppercase; margin-bottom: 16px;
   }
@@ -42,33 +36,15 @@
   }
   .subtitle { color: var(--muted); margin-top: 10px; font-size: 15px; }
 
-  /* Setup banner */
-  .setup-banner {
-    background: linear-gradient(135deg, rgba(66,133,244,0.1), rgba(52,168,83,0.1));
-    border: 1px solid rgba(66,133,244,0.3);
-    border-radius: 16px; padding: 20px 24px; margin-bottom: 24px;
-    animation: fadeUp 0.6s ease 0.05s both;
-  }
-  .setup-title { font-weight: 700; font-size: 14px; margin-bottom: 10px; color: var(--accent); display: flex; align-items: center; gap: 8px; }
-  .setup-steps { font-family: 'Space Mono', monospace; font-size: 12px; color: var(--muted); line-height: 2; }
-  .setup-steps span { color: var(--text); }
-  .setup-steps code {
-    background: var(--surface2); padding: 2px 8px; border-radius: 4px;
-    color: #34a853; font-size: 12px; border: 1px solid rgba(52,168,83,0.3);
-  }
-
   .api-section { background: var(--surface); border: 1px solid var(--border); border-radius: 16px; padding: 24px; margin-bottom: 24px; animation: fadeUp 0.6s ease 0.1s both; }
   .section-label { font-family: 'Space Mono', monospace; font-size: 11px; color: var(--accent); letter-spacing: 2px; text-transform: uppercase; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
   .section-label::before { content: ''; width: 6px; height: 6px; background: var(--accent); border-radius: 50%; box-shadow: 0 0 8px var(--accent); }
 
-  .api-input-row { display: flex; gap: 12px; }
-  input[type="password"] {
-    flex: 1; background: var(--surface2); border: 1px solid var(--border); border-radius: 10px;
-    padding: 12px 16px; color: var(--text); font-family: 'Space Mono', monospace; font-size: 14px; outline: none; transition: border-color 0.2s;
-  }
-  input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(66,133,244,0.12); }
-  .help-link { color: var(--accent); font-size: 12px; font-family: 'Space Mono', monospace; text-decoration: none; margin-top: 10px; display: inline-block; opacity: 0.8; }
-  .help-link:hover { opacity: 1; text-decoration: underline; }
+  .key-status { display: flex; align-items: center; gap: 10px; padding: 12px 16px; background: var(--surface2); border-radius: 10px; border: 1px solid var(--border); font-family: 'Space Mono', monospace; font-size: 13px; }
+  .key-status .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-green { background: var(--success); box-shadow: 0 0 8px var(--success); }
+  .dot-red { background: var(--error); box-shadow: 0 0 8px var(--error); }
+  .key-note { color: var(--muted); font-size: 12px; margin-top: 8px; font-family: 'Space Mono', monospace; }
 
   .btn { background: linear-gradient(135deg, var(--accent), #1a6fd4); color: white; border: none; border-radius: 10px; padding: 12px 24px; font-family: 'Syne', sans-serif; font-weight: 600; font-size: 14px; cursor: pointer; transition: all 0.2s; white-space: nowrap; }
   .btn:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(66,133,244,0.4); }
@@ -134,33 +110,19 @@
 <div class="container">
 
   <header>
-    <div class="logo-tag">✦ Powered by Gemini AI</div>
+    <div class="logo-tag">✦ Powered by Gemini 2.5 Flash</div>
     <h1>QC Report<br>→ Excel</h1>
     <p class="subtitle">Upload quality control report images — AI extracts data & exports to Excel</p>
   </header>
 
-  <!-- Setup Instructions -->
-  <div class="setup-banner">
-    <div class="setup-title">⚙ One-time Setup Required</div>
-    <div class="setup-steps">
-      1. Make sure <span>Python 3</span> is installed on your computer<br>
-      2. Place <code>server.py</code> and <code>index.html</code> in the same folder<br>
-      3. Open a terminal in that folder and run: <code>python server.py</code><br>
-      4. Open your browser and go to: <code>http://localhost:8080</code><br>
-      5. Enter your Gemini API key below and start converting!
-    </div>
-  </div>
-
-  <!-- API Key -->
+  <!-- API Key Status -->
   <div class="api-section">
     <div class="section-label">Gemini API Key</div>
-    <div class="api-input-row">
-      <input type="password" id="apiKey" placeholder="AIzaSy..." autocomplete="off">
-      <button class="btn" onclick="saveKey()">Save Key</button>
+    <div class="key-status" id="keyStatus">
+      <div class="dot dot-red" id="keyDot"></div>
+      <span id="keyText">Checking...</span>
     </div>
-    <a class="help-link" href="https://aistudio.google.com/app/apikey" target="_blank">
-      → Get a free key at aistudio.google.com/app/apikey
-    </a>
+    <p class="key-note">API key is configured via environment variable on Render. No need to enter it here.</p>
   </div>
 
   <!-- Drop Zone -->
@@ -211,6 +173,26 @@ let files = [];
 let allRows = [];
 let failedIndices = [];
 
+// Check if API key is configured on server
+async function checkKeyStatus() {
+  try {
+    const resp = await fetch('/api/status');
+    const data = await resp.json();
+    const dot = document.getElementById('keyDot');
+    const text = document.getElementById('keyText');
+    if (data.keyConfigured) {
+      dot.className = 'dot dot-green';
+      text.textContent = 'API key configured ✓ Ready to use';
+    } else {
+      dot.className = 'dot dot-red';
+      text.textContent = 'API key not set — add GEMINI_API_KEY in Render environment variables';
+    }
+  } catch(e) {
+    document.getElementById('keyText').textContent = 'Could not check key status';
+  }
+}
+checkKeyStatus();
+
 const dz = document.getElementById('dropZone');
 dz.addEventListener('dragover', e => { e.preventDefault(); dz.classList.add('drag-over'); });
 dz.addEventListener('dragleave', () => dz.classList.remove('drag-over'));
@@ -247,14 +229,6 @@ function clearAll() {
   document.getElementById('resultsSection').classList.add('hidden');
 }
 
-function saveKey() {
-  const k = document.getElementById('apiKey').value.trim();
-  if (k) { window._apiKey = k; addLog('Gemini API key saved ✓', 'success'); }
-  else alert('Please enter a key first.');
-}
-
-function getKey() { return window._apiKey || document.getElementById('apiKey').value.trim(); }
-
 function addLog(msg, type = '') {
   const log = document.getElementById('progressLog');
   const line = document.createElement('div');
@@ -283,48 +257,29 @@ function updateConvertBtn() {
 async function callGemini(file) {
   const b64 = await fileToBase64(file);
   const mimeType = file.type || 'image/jpeg';
-  const key = getKey();
 
-  // Try backend proxy first (when running via server.py)
-  try {
-    const resp = await fetch('/api/gemini', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ apiKey: key, imageB64: b64, mimeType })
-    });
-    if (resp.ok) {
-      const data = await resp.json();
-      if (data.error) throw new Error(data.error);
-      return data.rows;
-    }
-    // If we get a non-OK from the proxy, throw to show the real error
-    const errData = await resp.json().catch(() => ({}));
-    throw new Error(errData.error || `Server error ${resp.status}`);
-  } catch (proxyErr) {
-    // If fetch itself failed (not running via server), give a clear message
-    if (proxyErr.message === 'Failed to fetch' || proxyErr.name === 'TypeError') {
-      throw new Error(
-        'Cannot reach server. Please run: python server.py — then open http://localhost:8080'
-      );
-    }
-    throw proxyErr;
-  }
+  const resp = await fetch('/api/gemini', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ imageB64: b64, mimeType })
+  });
+
+  const data = await resp.json();
+  if (!resp.ok || data.error) throw new Error(data.error || `Server error ${resp.status}`);
+  return data.rows;
 }
 
 async function processIndex(i) {
   const f = files[i];
   const badge = document.getElementById(`badge-${i}`);
-  const existingRetry = document.getElementById(`retry-${i}`);
-  if (existingRetry) existingRetry.remove();
+  document.getElementById(`retry-${i}`)?.remove();
 
   if (badge) { badge.className = 'status-badge badge-processing processing-pulse'; badge.textContent = 'READING'; }
-
   addLog(`Extracting: ${f.name}`);
 
   try {
     const rows = await callGemini(f);
     rows.forEach(r => { r._source = f.name; });
-    // Remove old rows from this file if retrying
     allRows = allRows.filter(r => r._source !== f.name);
     allRows.push(...rows);
 
@@ -335,15 +290,11 @@ async function processIndex(i) {
   } catch (e) {
     failedIndices.push(i);
     if (badge) { badge.className = 'status-badge badge-error'; badge.textContent = 'ERROR'; badge.classList.remove('processing-pulse'); }
-
-    // Per-card retry button
     const card = document.getElementById(`card-${i}`);
     if (card && !document.getElementById(`retry-${i}`)) {
       const rb = document.createElement('button');
-      rb.id = `retry-${i}`;
-      rb.textContent = '↺';
-      rb.title = 'Retry this image';
-      rb.style.cssText = 'position:absolute;top:34px;right:6px;background:rgba(66,133,244,0.9);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:13px;font-weight:700;display:flex;align-items:center;justify-content:center;';
+      rb.id = `retry-${i}`; rb.textContent = '↺'; rb.title = 'Retry this image';
+      rb.style.cssText = 'position:absolute;top:34px;right:6px;background:rgba(66,133,244,0.9);color:white;border:none;border-radius:50%;width:24px;height:24px;cursor:pointer;font-size:13px;font-weight:700;';
       rb.onclick = ev => { ev.stopPropagation(); retrySingle(i); };
       card.appendChild(rb);
     }
@@ -353,8 +304,6 @@ async function processIndex(i) {
 }
 
 async function startConversion() {
-  const key = getKey();
-  if (!key) { alert('Please enter your Gemini API key first.'); return; }
   if (!files.length) { alert('Please upload at least one image.'); return; }
 
   const indicesToProcess = failedIndices.length > 0 ? [...failedIndices] : files.map((_, i) => i);
@@ -365,7 +314,7 @@ async function startConversion() {
   document.getElementById('convertBtn').disabled = true;
 
   setProgress(0, 'Starting extraction...');
-  addLog(`Processing ${indicesToProcess.length} image(s) with Gemini...`, 'info');
+  addLog(`Processing ${indicesToProcess.length} image(s) with Gemini 2.5 Flash...`, 'info');
 
   for (let idx = 0; idx < indicesToProcess.length; idx++) {
     setProgress(Math.round((idx / indicesToProcess.length) * 90), `Image ${idx + 1} of ${indicesToProcess.length}`);
@@ -376,7 +325,7 @@ async function startConversion() {
   const successCount = indicesToProcess.length - failCount;
 
   if (failCount > 0) {
-    setProgress(100, `⚠ ${successCount} succeeded, ${failCount} failed — click "Retry Failed" to try again`);
+    setProgress(100, `⚠ ${successCount} succeeded, ${failCount} failed — click "Retry Failed"`);
     addLog(`${failCount} image(s) failed.`, 'error');
   } else {
     setProgress(100, `✓ Done! Extracted ${allRows.length} total product entries.`);
@@ -389,8 +338,6 @@ async function startConversion() {
 }
 
 async function retrySingle(i) {
-  const key = getKey();
-  if (!key) { alert('Please enter your Gemini API key first.'); return; }
   failedIndices = failedIndices.filter(x => x !== i);
   await processIndex(i);
   updateConvertBtn();
@@ -410,14 +357,10 @@ function renderTable() {
   const tbody = document.getElementById('tableBody');
   tbody.innerHTML = allRows.map(r => `
     <tr>
-      <td>${r.variety||''}</td>
-      <td>${r.batch_code||''}</td>
-      <td>${r.mfg_date||''}</td>
-      <td>${r.expiry_date||''}</td>
-      <td>${r.mrp||''}</td>
+      <td>${r.variety||''}</td><td>${r.batch_code||''}</td><td>${r.mfg_date||''}</td>
+      <td>${r.expiry_date||''}</td><td>${r.mrp||''}</td>
       <td class="${(r.defects_status||'').toLowerCase()==='yes'?'has-defect':'no-defect'}">${r.defects_status||''}</td>
-      <td>${r.total_dispatch_ctn||''}</td>
-      <td>${r.party_name||''}</td>
+      <td>${r.total_dispatch_ctn||''}</td><td>${r.party_name||''}</td>
       <td style="color:var(--muted);font-size:10px">${r._source||''}</td>
     </tr>`).join('');
   document.getElementById('rowCount').textContent = allRows.length;
